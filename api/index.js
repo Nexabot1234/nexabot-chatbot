@@ -1,4 +1,4 @@
-const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
+const GROQ_KEY = process.env.GROQ_API_KEY || '';
 const SHOPIFY_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN || '';
 const SHOPIFY_URL = process.env.SHOPIFY_STORE_URL || 'nexabot.myshopify.com';
 
@@ -16,7 +16,7 @@ module.exports = (req, res) => {
 
   // Health check
   if (url.includes('health')) {
-    res.status(200).json({ status: 'ok', brand: 'NexaBot', openai: !!OPENAI_KEY, shopify: !!SHOPIFY_TOKEN });
+    res.status(200).json({ status: 'ok', brand: 'NexaBot', groq: !!GROQ_KEY, shopify: !!SHOPIFY_TOKEN });
     return;
   }
 
@@ -44,20 +44,20 @@ module.exports = (req, res) => {
     let context = 'General question about our Shopify store.';
 
     if (lower.includes('track') || lower.includes('order') || lower.includes('where')) {
-      context = 'Customer asking about order status. Ask for order number.';
+      context = 'Customer asking about order status. Ask for order number if not provided.';
     } else if (lower.includes('cart') || lower.includes('checkout')) {
-      context = 'Customer asking about cart recovery or checkout.';
+      context = 'Customer asking about cart recovery or checkout. Be helpful.';
     } else if (lower.includes('ship') || lower.includes('deliver') || lower.includes('arrive')) {
-      context = 'Shipping: 3-5 business days standard.';
+      context = 'Shipping: 3-5 business days standard, express available at checkout.';
     } else if (lower.includes('return') || lower.includes('refund')) {
-      context = 'Returns: 30 days, full refund.';
-    } else if (lower.includes('price') || lower.includes('cost')) {
-      context = 'Pricing question.';
+      context = 'Returns: 30 days, full refund available.';
+    } else if (lower.includes('price') || lower.includes('cost') || lower.includes('how much')) {
+      context = 'Pricing question. Be helpful and direct.';
     } else if (lower.includes('size') || lower.includes('fit')) {
-      context = 'Size and fit question.';
+      context = 'Size and fit question. Be helpful.';
     }
 
-    if (!OPENAI_KEY) {
+    if (!GROQ_KEY) {
       res.status(200).json({
         response: "Hey! I'm NexaBot. I'll be fully live soon. I can help with cart recovery, order tracking, shipping and returns!",
         demo: true
@@ -66,11 +66,11 @@ module.exports = (req, res) => {
     }
 
     const postData = JSON.stringify({
-      model: 'gpt-4o',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',
-          content: `You are NexaBot, a friendly AI assistant for a Shopify store. Be concise (2 sentences max), helpful and friendly. Context: ${context}`
+          content: `You are NexaBot, a friendly AI assistant for a Shopify store called NexaBot Demo Store. Be concise (2 sentences max), helpful and friendly. Never make up product info. Context: ${context}`
         },
         { role: 'user', content: message }
       ],
@@ -79,12 +79,12 @@ module.exports = (req, res) => {
     });
 
     const options = {
-      hostname: 'api.openai.com',
+      hostname: 'api.groq.com',
       port: 443,
-      path: '/v1/chat/completions',
+      path: '/openai/v1/chat/completions',
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + OPENAI_KEY,
+        'Authorization': 'Bearer ' + GROQ_KEY,
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData)
       }
@@ -98,41 +98,25 @@ module.exports = (req, res) => {
         try {
           const parsed = JSON.parse(data);
 
-          // Check for OpenAI error
           if (parsed.error) {
-            res.status(200).json({ response: "I'm having a moment - please try again!", error: parsed.error.message, debug: true });
+            res.status(200).json({ response: "I'm having a moment - please try again!", error: parsed.error.message });
             return;
           }
 
-          // Navigate the response tree correctly
           let reply = "I'm here! What can I help with?";
-
-          // Try standard path: data.choices[0].message.content
-          if (parsed.data && parsed.data.choices && parsed.data.choices[0] && parsed.data.choices[0].message) {
-            reply = parsed.data.choices[0].message.content;
-          }
-          // Try alternative path: choices[0].message.content
-          else if (parsed.choices && parsed.choices[0] && parsed.choices[0].message) {
+          if (parsed.choices && parsed.choices[0] && parsed.choices[0].message && parsed.choices[0].message.content) {
             reply = parsed.choices[0].message.content;
-          }
-          // Try just text: choices[0].text
-          else if (parsed.choices && parsed.choices[0] && parsed.choices[0].text) {
-            reply = parsed.choices[0].text;
-          }
-          // Log for debugging
-          else {
-            console.log('OpenAI response:', JSON.stringify(parsed).substring(0, 500));
           }
 
           res.status(200).json({ response: reply, intent: 'chat' });
         } catch (e) {
-          res.status(200).json({ response: "I'm having a moment - please try again!", parse_error: e.message, raw: data.substring(0, 200) });
+          res.status(200).json({ response: "I'm having a moment - please try again!" });
         }
       });
     });
 
     req2.on('error', (e) => {
-      res.status(200).json({ response: "I'm having a moment - please try again!", net_error: e.message });
+      res.status(200).json({ response: "I'm having a moment - please try again!" });
     });
 
     req2.write(postData);
@@ -142,7 +126,7 @@ module.exports = (req, res) => {
 
   // Root
   if (url === '/' || url === '') {
-    res.status(200).json({ brand: 'NexaBot', status: 'live' });
+    res.status(200).json({ brand: 'NexaBot', status: 'live', provider: 'Groq (Llama 3.3)' });
     return;
   }
 
