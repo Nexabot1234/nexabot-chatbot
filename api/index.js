@@ -1,104 +1,94 @@
-// Simple NexaBot API - no serverless-http dependency
-const { Configuration, OpenAIApi } = require('openai');
-const axios = require('axios');
+// NexaBot - Vercel Serverless API
+import { createClient } from '@supabase/supabase-js';
 
-function createResponse(statusCode, body) {
-  return {
-    statusCode,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    },
-    body: JSON.stringify(body)
-  };
-}
+const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
+const SHOPIFY_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN || '';
+const SHOPIFY_URL = process.env.SHOPIFY_STORE_URL || 'nexabot.myshopify.com';
 
-module.exports = async (req, res) => {
-  // CORS preflight
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
-    return createResponse(200, {});
+    res.status(200).end();
+    return;
   }
 
-  const path = req.path || req.url || '';
+  const url = req.url || '';
 
-  // Health check
-  if (path.includes('health')) {
-    return createResponse(200, { status: 'ok', brand: 'NexaBot', message: 'Server running' });
+  // Health
+  if (url.includes('health')) {
+    res.status(200).json({ status: 'ok', brand: 'NexaBot', openai: !!OPENAI_KEY, shopify: !!SHOPIFY_TOKEN });
+    return;
   }
 
-  // Chat endpoint
-  if (path.includes('/api/chat') && req.method === 'POST') {
-    const message = (req.body && req.body.message) ? req.body.message : '';
+  // Chat
+  if (url.includes('/api/chat') && req.method === 'POST') {
+    const message = req.body?.message || '';
 
     if (!message) {
-      return createResponse(400, { error: 'No message provided' });
+      res.status(400).json({ error: 'No message' });
+      return;
     }
 
-    const openaiKey = process.env.OPENAI_API_KEY;
-    const shopifyToken = process.env.SHOPIFY_ACCESS_TOKEN;
-    const shopifyUrl = process.env.SHOPIFY_STORE_URL || 'nexabot.myshopify.com';
+    const lower = message.toLowerCase();
+    let context = 'General question about our Shopify store.';
 
-    if (!openaiKey) {
-      return createResponse(200, {
-        response: "Hey! I'm NexaBot. The AI is currently being configured for this demo - check back in a moment. In the meantime, message me about cart recovery, order tracking, or product questions!",
-        intent: 'demo_mode'
+    if (lower.includes('track') || lower.includes('order') || lower.includes('where')) {
+      context = 'Customer asking about order status. Ask for order number if not provided.';
+    } else if (lower.includes('cart') || lower.includes('checkout')) {
+      context = 'Customer asking about checkout or cart. Be helpful.';
+    } else if (lower.includes('ship') || lower.includes('deliver')) {
+      context = 'Shipping: 3-5 business days standard, express at checkout.';
+    } else if (lower.includes('return') || lower.includes('refund')) {
+      context = 'Returns: 30 days, full refund.';
+    }
+
+    if (!OPENAI_KEY) {
+      res.status(200).json({
+        response: "Hey! I'm NexaBot. The AI integration is being set up - I'll be fully live soon. For now, I can help with cart recovery, order tracking, shipping and returns questions!",
+        demo: true
       });
+      return;
     }
 
     try {
-      const openai = new OpenAIApi(new Configuration({ apiKey: openaiKey }));
-
-      // Detect intent
-      const lower = message.toLowerCase();
-      let context = 'General customer question about our Shopify store.';
-
-      if (lower.includes('track') || lower.includes('order') || lower.includes('where')) {
-        context = 'Customer is asking about order status. If they provide an order number like #1001, acknowledge and say you will look it up.';
-      } else if (lower.includes('cart') || lower.includes('checkout')) {
-        context = 'Customer has a cart or checkout question. Be helpful and mention we can help them complete their purchase.';
-      } else if (lower.includes('ship') || lower.includes('deliver') || lower.includes('arrive')) {
-        context = 'Customer is asking about shipping. Standard shipping is 3-5 business days. Express available at checkout.';
-      } else if (lower.includes('return') || lower.includes('refund')) {
-        context = 'Customer is asking about returns. Our return window is 30 days with a full refund.';
-      }
-
-      const completion = await openai.createChatCompletion({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: `You are NexaBot, a friendly AI assistant for a Shopify store. Be concise (2-3 sentences max), helpful, and never make up product info. If you do not know something, say so. Current context: ${context}`
-          },
-          { role: 'user', content: message }
-        ],
-        max_tokens: 250,
-        temperature: 0.7
+      const completion = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: `You are NexaBot, a friendly AI assistant for a Shopify store. Be concise (2 sentences max), helpful. Never make up product info. Context: ${context}`
+            },
+            { role: 'user', content: message }
+          ],
+          max_tokens: 250,
+          temperature: 0.7
+        })
       });
 
-      return createResponse(200, {
-        response: completion.data.choices[0].message.content,
-        intent: 'chat'
-      });
+      const data = await completion.json();
+      const reply = data.choices?.[0]?.message?.content || "I'm here! What can I help with?";
 
+      res.status(200).json({ response: reply, intent: 'chat' });
     } catch (err) {
-      console.error('OpenAI error:', err.message);
-      return createResponse(200, {
-        response: "I'm having a little trouble right now - please try again in a moment!",
-        error: true
-      });
+      res.status(200).json({ response: "I'm having a moment - please try again!", error: true });
     }
+    return;
   }
 
   // Root
-  if (path === '/' || path === '') {
-    return createResponse(200, {
-      brand: 'NexaBot',
-      status: 'running',
-      message: 'NexaBot Shopify chatbot API - live at project-rv6ol.vercel.app'
-    });
+  if (url === '/' || url === '') {
+    res.status(200).json({ brand: 'NexaBot', status: 'live', url: 'https://project-rv6ol.vercel.app' });
+    return;
   }
 
-  return createResponse(404, { error: 'Not found' });
-};
+  res.status(404).json({ error: 'Not found' });
+}
