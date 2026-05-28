@@ -1,1 +1,1 @@
-{"name":"nexabot-chatbot","version":"1.0.0","dependencies":{"express":"^4.18.2","openai":"^4.28.0","axios":"^1.6.5"}}
+{"name":"nexabot-chatbot","version":"1.0.0","dependencies":{"openai":"^4.28.0","axios":"^1.6.5"}}
