@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NexaBot — Demo Store</title>
+  <title>NexaBot â€” Demo Store</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<!-- ── Demo Storefront (just for show) ──────────────────────── -->
+<!-- â”€â”€ Demo Storefront (just for show) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <header class="store-header">
-  <div class="store-logo">⚡ NexaBot Demo Store</div>
+  <div class="store-logo">âš¡ NexaBot Demo Store</div>
   <nav>
     <a href="#">Home</a>
     <a href="#">Products</a>
@@ -21,45 +21,45 @@
 
 <section class="hero">
   <h1>Premium Wireless Headphones</h1>
-  <p>48-hour battery. Studio-quality sound. $129 — free shipping.</p>
-  <button class="btn-primary">Add to Cart — $129</button>
-  <p class="stock-badge">✅ In stock — ships in 24 hours</p>
+  <p>48-hour battery. Studio-quality sound. $129 â€” free shipping.</p>
+  <button class="btn-primary">Add to Cart â€” $129</button>
+  <p class="stock-badge">âœ… In stock â€” ships in 24 hours</p>
 </section>
 
 <section class="product-grid">
   <div class="product-card">
-    <div class="product-img">🎧</div>
+    <div class="product-img">ðŸŽ§</div>
     <h3>Studio Pro</h3>
     <p>$129</p>
     <button>Add to Cart</button>
   </div>
   <div class="product-card">
-    <div class="product-img">🎵</div>
+    <div class="product-img">ðŸŽµ</div>
     <h3>Sport Edition</h3>
     <p>$89</p>
     <button>Add to Cart</button>
   </div>
   <div class="product-card">
-    <div class="product-img">🔊</div>
+    <div class="product-img">ðŸ”Š</div>
     <h3>Travel Max</h3>
     <p>$149</p>
     <button>Add to Cart</button>
   </div>
 </section>
 
-<!-- ── Chat Widget (live) ────────────────────────────────────── -->
+<!-- â”€â”€ Chat Widget (live) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <div id="nexabot-launcher" onclick="toggleChat()">
-  <span>💬</span>
+  <span>ðŸ’¬</span>
 </div>
 
 <div id="nexabot-window" class="nexabot-hidden">
   <div class="nexabot-header">
-    <span>⚡ NexaBot</span>
-    <button onclick="toggleChat()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">✕</button>
+    <span>âš¡ NexaBot</span>
+    <button onclick="toggleChat()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">âœ•</button>
   </div>
   <div class="nexabot-messages" id="nexabot-messages">
     <div class="nexabot-bot-msg">
-      Hi! I'm NexaBot 👋 — how can I help you today?
+      Hi! I'm NexaBot ðŸ‘‹ â€” how can I help you today?
     </div>
   </div>
   <div class="nexabot-input-area">
@@ -71,7 +71,7 @@
 <script>
   // Load NexaBot config from window object
   const config = window.NEXABOT_CONFIG || {
-    apiUrl: 'http://localhost:3000',
+    apiUrl: 'https://project-rv6ol.vercel.app',
     storeName: 'NexaBot Demo Store',
     brandColor: '#00c3ff',
     position: 'bottom-right'
@@ -115,7 +115,7 @@
       const data = await res.json();
       addMessage(data.response || 'Got it! Let me know if you need anything else.', 'bot');
     } catch {
-      addMessage('Oops — something went wrong. Please try again.', 'bot');
+      addMessage('Oops â€” something went wrong. Please try again.', 'bot');
     }
   }
 </script>
