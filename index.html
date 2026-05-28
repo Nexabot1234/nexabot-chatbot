@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NexaBot â€” Demo Store</title>
+  <title>NexaBot - Demo Store</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<!-- â”€â”€ Demo Storefront (just for show) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <header class="store-header">
-  <div class="store-logo">âš¡ NexaBot Demo Store</div>
+  <div class="store-logo">NEXABOT</div>
   <nav>
     <a href="#">Home</a>
     <a href="#">Products</a>
@@ -20,46 +19,41 @@
 </header>
 
 <section class="hero">
-  <h1>Premium Wireless Headphones</h1>
-  <p>48-hour battery. Studio-quality sound. $129 â€” free shipping.</p>
-  <button class="btn-primary">Add to Cart â€” $129</button>
-  <p class="stock-badge">âœ… In stock â€” ships in 24 hours</p>
+  <h1>AI Chatbot for Shopify</h1>
+  <p>Recover abandoned carts. Track orders. Boost sales. Powered by GPT-4.</p>
+  <button class="btn-primary">See How It Works</button>
 </section>
 
 <section class="product-grid">
   <div class="product-card">
-    <div class="product-img">ðŸŽ§</div>
-    <h3>Studio Pro</h3>
-    <p>$129</p>
-    <button>Add to Cart</button>
+    <div class="product-img">CART</div>
+    <h3>Cart Recovery</h3>
+    <p>Win back lost customers</p>
   </div>
   <div class="product-card">
-    <div class="product-img">ðŸŽµ</div>
-    <h3>Sport Edition</h3>
-    <p>$89</p>
-    <button>Add to Cart</button>
+    <div class="product-img">ORDER</div>
+    <h3>Order Tracking</h3>
+    <p>Real-time status updates</p>
   </div>
   <div class="product-card">
-    <div class="product-img">ðŸ”Š</div>
-    <h3>Travel Max</h3>
-    <p>$149</p>
-    <button>Add to Cart</button>
+    <div class="product-img">SALE</div>
+    <h3>Sales Support</h3>
+    <p>24/7 AI assistant</p>
   </div>
 </section>
 
-<!-- â”€â”€ Chat Widget (live) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <div id="nexabot-launcher" onclick="toggleChat()">
-  <span>ðŸ’¬</span>
+  <span>N</span>
 </div>
 
 <div id="nexabot-window" class="nexabot-hidden">
   <div class="nexabot-header">
-    <span>âš¡ NexaBot</span>
-    <button onclick="toggleChat()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">âœ•</button>
+    <span>NexaBot</span>
+    <button onclick="toggleChat()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">X</button>
   </div>
   <div class="nexabot-messages" id="nexabot-messages">
     <div class="nexabot-bot-msg">
-      Hi! I'm NexaBot ðŸ‘‹ â€” how can I help you today?
+      Hi! I am NexaBot - how can I help you today?
     </div>
   </div>
   <div class="nexabot-input-area">
@@ -69,26 +63,20 @@
 </div>
 
 <script>
-  // Load NexaBot config from window object
-  const config = window.NEXABOT_CONFIG || {
-    apiUrl: 'https://project-rv6ol.vercel.app',
-    storeName: 'NexaBot Demo Store',
-    brandColor: '#00c3ff',
-    position: 'bottom-right'
-  };
+  var apiUrl = 'https://project-rv6ol.vercel.app';
+  var storeName = 'NexaBot Demo Store';
+  var brandColor = '#00c3ff';
 
-  // Apply brand color
-  document.documentElement.style.setProperty('--nexa-accent', config.brandColor || '#00c3ff');
-  document.documentElement.style.setProperty('--nexa-position', config.position || 'bottom-right');
+  document.documentElement.style.setProperty('--nexa-accent', brandColor);
 
   function toggleChat() {
-    const win = document.getElementById('nexabot-window');
+    var win = document.getElementById('nexabot-window');
     win.classList.toggle('nexabot-hidden');
   }
 
   function addMessage(text, sender) {
-    const container = document.getElementById('nexabot-messages');
-    const div = document.createElement('div');
+    var container = document.getElementById('nexabot-messages');
+    var div = document.createElement('div');
     div.className = sender === 'user' ? 'nexabot-user-msg' : 'nexabot-bot-msg';
     div.textContent = text;
     container.appendChild(div);
@@ -96,26 +84,23 @@
   }
 
   async function sendMessage() {
-    const input = document.getElementById('nexabot-input');
-    const text = input.value.trim();
+    var input = document.getElementById('nexabot-input');
+    var text = input.value.trim();
     if (!text) return;
 
     addMessage(text, 'user');
     input.value = '';
 
     try {
-      const res = await fetch(`${config.apiUrl}/api/chat`, {
+      var res = await fetch(apiUrl + '/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          context: { storeName: config.storeName }
-        })
+        body: JSON.stringify({ message: text, context: { storeName: storeName } })
       });
-      const data = await res.json();
-      addMessage(data.response || 'Got it! Let me know if you need anything else.', 'bot');
-    } catch {
-      addMessage('Oops â€” something went wrong. Please try again.', 'bot');
+      var data = await res.json();
+      addMessage(data.response || 'Got it!', 'bot');
+    } catch (e) {
+      addMessage('Something went wrong. Please try again.', 'bot');
     }
   }
 </script>
